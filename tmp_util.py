@@ -1,12 +1,46 @@
-__author__ = 'Sajal/Harshal'
-
-# TODO : refactor name of file
-
 from os import listdir,path
 from collections import Counter
 from collections import defaultdict
 from svmutil import *
 from nltk import word_tokenize,sent_tokenize
+
+__author__ = 'Sajal/Harshal'
+
+# TODO : refactor name of file
+
+
+''' Sajal : Including function load_data
+
+Description
+    Loads the input data for the project as a list of input training samples, their labels and input test samples.
+
+Input
+    None
+
+Output
+    3 list. One for each : Train X, Train Y, Test Y.
+'''
+def load_data():
+    input_dir = 'data/'
+    train_file = 'project_articles_train'
+    test_file = 'project_articles_test'
+
+    train_X=[]
+    train_Y=[]
+    test_X=[]
+
+    with open(input_dir+train_file,'r') as fp_train:
+        for line in fp_train:
+            data = line.strip().rsplit('\t',1)
+            train_X.append(data[0])
+            train_Y.append(data[1])
+
+    with open(input_dir+test_file,'r') as fp_test:
+        for ine in fp_test:
+            data = line.strip()
+            test_X.append(data)
+
+    return train_X,train_Y,test_X
 
 ''' Harshal : Including Function get_all_files()
 
@@ -19,8 +53,6 @@ Input:
 Output:
     List of files in the directory containing absolute paths of files inside the directory
 '''
-
-
 def get_all_files(directory):
     if directory[-1] == "/":
         directory = directory[:-1]
@@ -48,37 +80,11 @@ Input:
 Output:
     List
 '''
-
-
 def flatten(l):
     temp = []
     for i in l:
         temp+=[j for j in i]
     return temp
-
-'''Harshal : Adding function train_test_model
-
-Description:
-   This function call the svm function in libsvm and outputs the classification accuracy
-
-Input:
-   Strings containing the path to the train datafile and test data file
-
-Output:
-  predicted labels, predicted accuracy and predicted values
-
-
-'''
-
-def train_test_model(train_datafile, test_datafile):
-    y_train, x_train = svm_read_problem(train_datafile)
-    problem = svm_problem(y_train, x_train)
-    param = svm_parameter('-t 0 -e .01 -m 1000 -h 0')
-    m = svm_train(problem,param)
-    y_test, x_test = svm_read_problem(test_datafile)
-    p_labels, p_acc, p_vals = svm_predict(y_test, x_test, m)
-    return p_labels, p_acc, p_vals
-
 
 
 '''Harshal : Adding function create_vocab
@@ -129,6 +135,7 @@ def generate_data_labels(filepath):
     return sentence_labels
 
 ''' Harshal : Adding function generate_svm_files()
+
 Description:
     This function will read the data as a list of (sentence,label) pairs and generate a file formated in the form required by libsvm ie (label features in the sentence). The output will be written in a file
 
@@ -161,3 +168,26 @@ def generate_svm_files(sentence_label_list, vocab, output_file):
 
     output_file_handle.close()
 
+
+
+'''Harshal : Adding function train_test_model
+
+Description:
+   This function call the svm function in libsvm and outputs the classification accuracy
+
+Input:
+   Strings containing the path to the train datafile and test data file
+
+Output:
+  predicted labels, predicted accuracy and predicted values
+ 
+'''
+
+def train_test_model(train_datafile, test_datafile):
+    y_train, x_train = svm_read_problem(train_datafile)
+    problem = svm_problem(y_train, x_train)
+    param = svm_parameter('-t 0 -e .01 -m 1000 -h 0')
+    m = svm_train(problem,param)
+    y_test, x_test = svm_read_problem(test_datafile)
+    p_labels, p_acc, p_vals = svm_predict(y_test, x_test, m)
+    return p_labels, p_acc, p_vals
