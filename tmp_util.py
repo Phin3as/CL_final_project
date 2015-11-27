@@ -48,8 +48,6 @@ Input:
 Output:
     List of files in the directory containing absolute paths of files inside the directory
 '''
-
-
 def get_all_files(directory):
     if directory[-1] == "/":
         directory = directory[:-1]
@@ -77,8 +75,6 @@ Input:
 Output:
     List
 '''
-
-
 def flatten(l):
     temp = []
     for i in l:
@@ -96,7 +92,6 @@ Output:
    A dictionary containing a mapping of penn tree bank tags to google tags
 
 '''
-
 def get_google_pos(f):
     f_handle = open(f,"r")
     google_dict = {}
@@ -111,7 +106,6 @@ Description:
    The function parses Penn tree bank files and outputs a dictionary c
 
 '''
-
 def parse_taggedfile(wsjfile, tagmap):
     wsjfile_handle = open(wsjfile,"r")
     pos_list = []
@@ -198,7 +192,6 @@ Input:
 Output:
    None
 '''
-    
 def prep_data(dirname, outfile, windowsize, tagmap, vocab):
     file_list = get_all_files(dirname)
     outfile_handle = open(outfile,"w")
@@ -258,7 +251,6 @@ Output:
 
 
 '''
-
 def train_test_model(train_datafile, test_datafile):
     y_train, x_train = svm_read_problem(train_datafile)
     problem = svm_problem(y_train, x_train)
@@ -267,5 +259,3 @@ def train_test_model(train_datafile, test_datafile):
     y_test, x_test = svm_read_problem(test_datafile)
     p_labels, p_acc, p_vals = svm_predict(y_test, x_test, m)
     return p_labels, p_acc, p_vals
-
->>>>>>> 77f681aebf6e5ac17fea24a167a49bdfffb77004
