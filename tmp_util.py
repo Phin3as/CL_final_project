@@ -8,14 +8,18 @@ __author__ = 'Sajal/Harshal'
 # TODO : refactor name of file
 
 
-# name: load_data
-# params:
-# return: train_X,train_Y,test_X
-# The directory location is hard coded. It should be in the same place as this file in a folder called data.
+''' Sajal : Including function load_data
 
+Description
+    Loads the input data for the project as a list of input training samples, their labels and input test samples.
 
+Input
+    None
+
+Output
+    3 list. One for each : Train X, Train Y, Test Y.
+'''
 def load_data():
-    # SAJAL
     input_dir = 'data/'
     train_file = 'project_articles_train'
     test_file = 'project_articles_test'
