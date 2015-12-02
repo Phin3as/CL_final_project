@@ -1,5 +1,7 @@
 import time
 import tmp_util
+import models
+import cross_validation as cv
 
 __author__ = 'Sajal/Harshal'
 
@@ -8,7 +10,11 @@ __author__ = 'Sajal/Harshal'
 if __name__ == '__main__':
     start_time = time.time()
 
-    train_X,train_Y,test_X=tmp_util.load_data()
+    X_train,Y_train,X_test=tmp_util.load_data()
+    print 'Data Loaded'
+
+    cv.cross_validation(X_train,Y_train,10,models.all_zero)
+    cv.cross_validation(X_train,Y_train,10,models.all_one)
 
     end_time = time.time()
     print("--- %s seconds ---" % (time.time() - start_time))

@@ -33,10 +33,10 @@ def load_data():
         for line in fp_train:
             data = line.strip().rsplit('\t',1)
             train_X.append(data[0])
-            train_Y.append(data[1])
+            train_Y.append(int(data[1]))
 
     with open(input_dir+test_file,'r') as fp_test:
-        for ine in fp_test:
+        for line in fp_test:
             data = line.strip()
             test_X.append(data)
 
