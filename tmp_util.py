@@ -1,8 +1,9 @@
 from os import listdir,path
 from collections import Counter
 from collections import defaultdict
-from svmutil import *
+#from svmutil import *
 from nltk import word_tokenize,sent_tokenize
+from math import log
 
 __author__ = 'Sajal/Harshal'
 
@@ -134,60 +135,67 @@ def generate_data_labels(filepath):
     file_handle.close()
     return sentence_labels
 
-''' Harshal : Adding function generate_svm_files()
+'''Harshal: Adding function KLEntropy
 
-Description:
-    This function will read the data as a list of (sentence,label) pairs and generate a file formated in the form required by libsvm ie (label features in the sentence). The output will be written in a file
+Decription: 
 
-Input:
-    String containing the path to the directory containing the data, 
-'''
-
-def generate_svm_files(sentence_label_list, vocab, output_file):
-    label_list = [value for sent,value in sentence_label_list]
-    sent_list = [sent for sent,value in sentence_label_list]
-
-    vocab_feature_space = {word : str(i+1) for i,word in enumerate(vocab)}
-    
-    unique_labels = list(set(label_list))
-    unique_labels.sort()
-
-    label_feature_space = {label : str(i+1) for i,label in enumerate(unique_labels)}
-
-    output_file_handle = open(output_file, "w")
-    
-    for index,sent in enumerate(sent_list):
-        words_list = flatten([[word.encode('utf-8') for word in word_tokenize(s)] for s in sent_tokenize(sent.decode('utf-8'))])
-        counts = Counter(words_list)
-        
-        feature_list = [label_feature_space[label_list[index]]]
-        for w in counts:
-            if w in vocab_feature_space.keys():
-                feature_list+=[vocab_feature_space[w]+":"+str(counts[w])]
-        output_file_handle.write(' '.join(feature_list)+"\n")
-
-    output_file_handle.close()
-
-
-
-'''Harshal : Adding function train_test_model
-
-Description:
-   This function call the svm function in libsvm and outputs the classification accuracy
+Computes the KL Entropy for two given probabilites
 
 Input:
-   Strings containing the path to the train datafile and test data file
+
+Two float values representing probabilities of some word in P and Q distribution respectively
 
 Output:
-  predicted labels, predicted accuracy and predicted values
- 
+
+Float value consisting of the entropy
+
 '''
 
-def train_test_model(train_datafile, test_datafile):
-    y_train, x_train = svm_read_problem(train_datafile)
-    problem = svm_problem(y_train, x_train)
-    param = svm_parameter('-t 0 -e .01 -m 1000 -h 0')
-    m = svm_train(problem,param)
-    y_test, x_test = svm_read_problem(test_datafile)
-    p_labels, p_acc, p_vals = svm_predict(y_test, x_test, m)
-    return p_labels, p_acc, p_vals
+def KLEntropy(p , q):
+    if p == 0:
+        return 0.0
+    else:
+        return p*log(p/q)
+
+
+'''Harshal : Adding function compute_distribution
+
+Description:
+
+Computes the probability distribution of words present in word_list. Counts the frequency of words in the list and divides by the total number of words in the list.
+
+Input:
+
+A list of words as strings
+
+Output:
+
+A default dictionary containing the mapping between words and their probabilities in the word_list
+
+'''
+
+def compute_distribution(word_list):
+    count_dict = Counter(word_list)
+    count_sum = len(word_list)
+    if count_sum <= 0 :
+        return defaultdict(int)
+    prob_dict = defaultdict(int, { word : count_dict[word]*1.0/count_sum for word in count_dict})
+    return prob_dict
+
+'''Harshal : Adding function KLDivergence
+
+Description:
+
+Computes the KLDivergence between two distributions P and Q. Computes the KL Entropy between for each word in P distribution and sums them all up.
+
+Input:
+
+Two default dictionaries containing words and their probabilities for two distributions P and Q.
+
+
+'''
+
+def KLDivergence(P, Q):
+    kvalue = 0.0
+    klvalue = sum([KLEntropy(P[word],Q[word]) for word in P if word in Q])
+    return klvalue
