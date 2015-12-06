@@ -1,7 +1,7 @@
 from os import listdir,path
 from collections import Counter
 from collections import defaultdict
-#from svmutil import *
+from svmutil import *
 from nltk import word_tokenize,sent_tokenize
 from math import log
 
