@@ -1,6 +1,7 @@
 __author__ = 'Sajal'
 
 from tmp_util import *
+from math import sqrt
 
 def all_zero(X_train,Y_train,X_test):
     return [0]*len(X_test)
@@ -143,3 +144,46 @@ def KL_Classifier(train_X, train_Y, test_X):
             test_Y.append(1)
     
     return test_Y
+
+
+def model_cos_sim(train_X, train_Y, test_X):
+
+    Y_test = []
+    for data in test_X:
+        max_sim=0
+        max_idx=-1
+        ind=0
+        for data2 in train_X:
+            sim=cosine_sim(data,data2)
+            if sim > max_sim:
+                max_sim=sim
+                max_idx=ind
+            ind+=1
+        Y_test.append(train_Y[max_idx])
+
+    return Y_test
+
+
+def cosine_sim(l1, l2):
+    # print 's'
+    n=l1.__len__()
+    m=l2.__len__()
+    if (n!=m):
+        return 0
+    sum=0
+    l1_den=0
+    l2_den=0
+    for key,val in l1.iteritems():
+        if not l2.has_key(key):
+            continue
+        val2=l2[key]
+        sum+=val*val2
+        l1_den+=val*val
+        l2_den+=val2*val2
+        # print l1_den,l2_den
+
+    if sqrt(l1_den)*sqrt(l2_den)==0:
+        sim=0
+    else:
+        sim=sum/float(sqrt(l1_den)*sqrt(l2_den))
+    return sim

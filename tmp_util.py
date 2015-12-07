@@ -1,7 +1,7 @@
 from os import listdir,path
 from collections import Counter
 from collections import defaultdict
-from svmutil import *
+# from svmutil import *
 from nltk import word_tokenize,sent_tokenize
 from math import log
 
@@ -42,6 +42,94 @@ def load_data():
             test_X.append(data)
 
     return train_X,train_Y,test_X
+
+
+def get_words_from_corpus(train_X,test_X):
+    word_list=[]
+    for article in train_X:
+        sentences =  sent_tokenize(article.decode('utf-8'))
+        for sent in sentences:
+            sent=sent.encode('utf-8')
+            sent_tokens = word_tokenize(sent.decode('utf-8'))
+            for token in sent_tokens:
+                token=token.encode('utf-8')
+                word_list.append(token)
+
+    for article in test_X:
+        sentences =  sent_tokenize(article.decode('utf-8'))
+        for sent in sentences:
+            sent=sent.encode('utf-8')
+            sent_tokens = word_tokenize(sent.decode('utf-8'))
+            for token in sent_tokens:
+                token=token.encode('utf-8')
+                word_list.append(token)
+
+    word_dict=Counter(word_list)
+    return word_dict
+
+
+def convert_to_word_freq(word_dict,X_train,X_test):
+    word_ind={}
+
+    word_list = list(word_dict.keys())
+
+    ind=0
+    for word in word_list:
+        word_ind[word]=ind
+        ind+=1
+
+    word_freq_train=[]
+    for article in X_train:
+        new_list=[]
+        sentences =  sent_tokenize(article.decode('utf-8'))
+        for sent in sentences:
+            sent=sent.encode('utf-8')
+            sent_tokens = word_tokenize(sent.decode('utf-8'))
+            for token in sent_tokens:
+                token=token.encode('utf-8')
+                val=word_ind[token]
+                new_list.append(val)
+        word_freq_train.append(new_list)
+
+    word_freq_test=[]
+    for article in X_test:
+        new_list=[]
+        sentences =  sent_tokenize(article.decode('utf-8'))
+        for sent in sentences:
+            sent=sent.encode('utf-8')
+            sent_tokens = word_tokenize(sent.decode('utf-8'))
+            for token in sent_tokens:
+                token=token.encode('utf-8')
+                val=word_ind[token]
+                new_list.append(val)
+        word_freq_test.append(new_list)
+
+    return word_freq_train,word_freq_test,word_ind
+
+
+def normalize_data(word_freq_train,word_freq_test):
+    ind=0
+    for data in word_freq_train:
+        new_data={}
+        data=Counter(data)
+        total=sum(data.values())
+        for key,el in data.iteritems():
+            new_data[key]=el/float(total)
+        word_freq_train[ind]=new_data
+        ind+=1
+
+    ind=0
+    for data in word_freq_test:
+        new_data={}
+        data=Counter(data)
+        total=sum(data.values())
+        for key,el in data.iteritems():
+            new_data[key]=el/float(total)
+        word_freq_test[ind]=new_data
+        ind+=1
+
+    return word_freq_train,word_freq_test
+
 
 ''' Harshal : Including Function get_all_files()
 
