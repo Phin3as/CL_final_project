@@ -2,6 +2,7 @@ __author__ = 'Sajal'
 
 from tmp_util import *
 from math import sqrt
+from sklearn.svm import SVC
 
 def all_zero(X_train,Y_train,X_test):
     return [0]*len(X_test)
@@ -9,6 +10,133 @@ def all_zero(X_train,Y_train,X_test):
 def all_one(X_train,Y_train,X_test):
     return [1]*len(X_test)
 
+
+class NGram:
+    
+    probabilities = None
+    probabilities_denom = None
+    vocab = None
+    V = 0
+    k = 0.25
+    feature_type=None
+    N = 0
+
+    def probability(self,ngram):
+        if self.probabilities[ngram[0:-1]] == 0:
+            float('Inf')
+        prob = (self.probabilities[ngram]+self.k)/(self.probabilities_denom[ngram[0:-1]]+self.k*self.V)
+        return prob
+
+    def log_prob(self,sentence):
+        preprocessed_list = preprocess_data([sentence])
+        vocab,transformed_data = generate_features(preprocessed_list,1,1000,self.feature_type)
+        transformed_UNK = [[word if word in self.vocab else "<UNK>" for word in w] for w in transformed_data]
+        transformed_data = [['<s>']+w for w in transformed_UNK]
+        pattern_list = []
+        for i in transformed_data:
+            for j in range(len(i)-self.N+1):
+                pattern_list.append(tuple(i[j:j+self.N]))
+        
+        prob = [log(self.probability(i)) for i in pattern_list if self.probability(i)!=float('Inf')]
+        if len(prob) == 0:
+            return None
+        return sum(prob)
+
+    def __init__(self,sentence_list,N,feature_type):
+        
+        self.N = N
+        preprocessed_list = preprocess_data(sentence_list)
+        vocab,transformed_X = generate_features(preprocessed_list,1,1000,feature_type)
+        self.feature_type = feature_type
+        self.vocab = vocab
+        transformed_X_UNK = [[word if word in vocab else "<UNK>" for word in w ] for w in transformed_X]
+        self.V = len(list(set(flatten(transformed_X_UNK))))
+        transformed_X = [['<s>']+w for w in transformed_X_UNK]
+        pattern_list = []
+        pattern_list_denom = []
+        for i in transformed_X:
+            for j in range(len(i)-N+2):
+                pattern_list_denom.append(tuple(i[j:j+N-1]))
+            for j in range(len(i)-N+1):
+                pattern_list.append(tuple(i[j:j+N]))
+        self.probabilities = Counter(pattern_list)
+        self.probabilities_denom = Counter(pattern_list_denom)
+        sum_total = len(pattern_list)
+        sum_total_denom = len(pattern_list_denom)
+        self.probabilities = defaultdict(int,{word: self.probabilities[word]/float(sum_total) for word in self.probabilities})
+        self.probabilities_denom = defaultdict(int,{word :self.probabilities_denom[word]/float(sum_total_denom) for word in self.probabilities_denom})
+
+def NGram_driver(X_train,Y_train,X_test):
+    author_train = [X_train[i] for i in range(len(Y_train)) if Y_train[i] == 1]
+    other_train = [X_train[i] for i in range(len(Y_train)) if Y_train[i]==0]
+
+    model_author = NGram(author_train,2,'words')
+    model_other = NGram(other_train,2,'words')
+    
+    predicted_labels = []
+    for sentence in X_test:
+        author_prob = model_author.log_prob(sentence)
+        other_prob = model_other.log_prob(sentence)
+        print author_prob,other_prob
+        if author_prob == None:
+            predicted_labels+=[0]
+        elif other_prob == None:
+            predicted_labels+=[1]
+        elif  author_prob >= other_prob:
+            predicted_labels+=[1]
+        else:
+            predicted_labels+=[0]
+    return predicted_labels
+
+def svm_driver_sklearn(X_train,Y_train,X_test):
+    #X_train_prep = preprocess_data(X_train)
+    #X_test_prep = preprocess_data(X_test)
+    
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    features_train = generate_svm_features_sklearn(sentence_label_list_train,vocab_train)
+    features_test = generate_svm_features_sklearn(sentence_label_list_test,vocab_train)
+    
+    svm_model = SVC()
+    svm_model.fit(features_train,Y_train)
+    print svm_model.predict(features_test)
+    return svm_model.predict(features_test)
+
+def generate_svm_features_sklearn(feature_label_list,vocab,normalize=False):
+    label_list = [label for feat,label in feature_label_list]
+    feat_list = [feat for feat,label in feature_label_list]
+    
+    vocab_feature_space = {word : str(i+1) for i,word in enumerate(vocab)}
+    
+    unique_labels = list(set(label_list))
+    unique_labels.sort()
+
+    label_feature_space = {label : str(i) for i,label in enumerate(unique_labels)}
+    
+    feature_space = []
+    for index,words_list in enumerate(feat_list):
+        counts = Counter(words_list)
+        if normalize:
+            counts = L2_normalization(counts)
+        feature_list = []
+        for w in vocab_feature_space:
+            if w in counts:
+                feature_list+=[counts[w]]
+            else:
+                feature_list+=[0]
+        feature_space+=[feature_list]
+                
+        #output_file_handle.write(' '.join(feature_list)+"\n")
+
+    return feature_space
+    #output_file_handle.close()
+    
 '''Harshal : Adding function svm_driver to perform svm and be used by cross validation
 
 Description:
@@ -28,12 +156,22 @@ a list of predictions obtained by running svm on test data X_test
 
 def svm_driver(X_train, Y_train, X_test):
     
-    vocab = create_vocab(X_train,1,1000)
-    sentence_label_list = zip(X_train,Y_train)
-    outputfile_path = 'DataGen/models_train_svm'
-    generate_svm_files(sentence_label_list,vocab,outputfile_path)
+    X_train_prep = preprocess_data(X_train)
+    X_test_prep = preprocess_data(X_test)
     
-    predicted_labels = train_test_model(outputfile_path,X_test)
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'func_words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'func_words')
+
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    outputfile_path_train = 'DataGen/models_train_svm'
+    outputfile_path_test = 'DataGen/models_test_svm'
+
+    generate_svm_files(sentence_label_list_train,vocab_train,outputfile_path_train,normalize=True)
+    generate_svm_files(sentence_label_list_test,vocab_train,outputfile_path_test,normalize=True)
+
+    predicted_labels = train_test_model(outputfile_path_train,outputfile_path_test)
     
     return predicted_labels
 
@@ -47,27 +185,29 @@ Input:
     String containing the path to the directory containing the data, 
 '''
 
-def generate_svm_files(sentence_label_list, vocab, output_file):
-    label_list = [value for sent,value in sentence_label_list]
-    sent_list = [sent for sent,value in sentence_label_list]
-
+def generate_svm_files(feature_label_list, vocab, output_file,normalize=False):
+    label_list = [label for feat,label in feature_label_list]
+    feat_list = [feat for feat,label in feature_label_list]
+    
     vocab_feature_space = {word : str(i+1) for i,word in enumerate(vocab)}
     
     unique_labels = list(set(label_list))
     unique_labels.sort()
 
     label_feature_space = {label : str(i+1) for i,label in enumerate(unique_labels)}
-
+    
     output_file_handle = open(output_file, "w")
     
-    for index,sent in enumerate(sent_list):
-        words_list = flatten([[word.encode('utf-8') for word in word_tokenize(s)] for s in sent_tokenize(sent.decode('utf-8'))])
+    for index,words_list in enumerate(feat_list):
         counts = Counter(words_list)
-        
+        if normalize:
+            counts = L2_normalization(counts)
         feature_list = [label_feature_space[label_list[index]]]
+        
         for w in counts:
             if w in vocab_feature_space.keys():
                 feature_list+=[vocab_feature_space[w]+":"+str(counts[w])]
+                
         output_file_handle.write(' '.join(feature_list)+"\n")
 
     output_file_handle.close()
@@ -80,21 +220,21 @@ Description:
    This function call the svm function in libsvm and outputs the classification accuracy
 
 Input:
-   Strings containing the path to the train datafile and list of test data whose labels are to be predicted. NOTE THAT DUE TO THE STRANGE DEFINITION OF svm_predict in libsvm, we have to pass a y_test to it.
+   Strings containing the path to the train datafile and string path of test data whose labels are to be predicted. NOTE THAT DUE TO THE STRANGE DEFINITION OF svm_predict in libsvm, we have to pass a y_test to it that are just all ones.
 
 Output:
   predicted labels
  
 '''
 
-def train_test_model(train_datafile, X_test):
+def train_test_model(train_datafile, test_datafile):
     y_train, x_train = svm_read_problem(train_datafile)
     problem = svm_problem(y_train, x_train)
     param = svm_parameter('-t 0 -e .01 -m 1000 -h 0')
     m = svm_train(problem,param)
-    #y_test, x_test = svm_read_problem(test_datafile)
-    Y_test = [1]*len(X_test);
-    p_labels, p_acc, p_vals = svm_predict(y_test,X_test, m)
+    Y_test, X_test = svm_read_problem(test_datafile)
+    p_labels, p_acc, p_vals = svm_predict(Y_test,X_test,m)
+    p_labels = [1 if int(i) == 2 else 0 for i in p_labels]
     return p_labels
 
 '''Harshal : Adding KL_Classifier

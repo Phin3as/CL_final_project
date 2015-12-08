@@ -1,8 +1,10 @@
 from os import listdir,path
 from collections import Counter
 from collections import defaultdict
-# from svmutil import *
-from nltk import word_tokenize,sent_tokenize
+from svmutil import *
+from nltk import word_tokenize,sent_tokenize,pos_tag
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.stem import PorterStemmer
 from math import log
 
 __author__ = 'Sajal/Harshal'
@@ -188,14 +190,9 @@ Output:
     list of words ranked according to their frequency of occurance.
 '''
 
-def create_vocab(sentence_list, limit, topk):
-    #file_list = get_all_files(inputdir)
-    word_list = []
-    #for f in file_list:
-    #f_handle = open(inputfile,"r")
-    word_list+=flatten([[w.encode('utf-8') for w in word_tokenize(s.decode('utf-8'))] for s in sentence_list])
+def create_vocab(feature_list, limit, topk):
     
-    counts_words = Counter(word_list)
+    counts_words = Counter(feature_list)
     vocab_words = [(word,counts_words[word]) for word in counts_words if counts_words[word] >= limit]
     vocab_words.sort(key = lambda x:(x[1],x[0]),reverse=True)
     vocabulary = [words for words,values in vocab_words]
@@ -287,3 +284,55 @@ def KLDivergence(P, Q):
     kvalue = 0.0
     klvalue = sum([KLEntropy(P[word],Q[word]) for word in P if word in Q])
     return klvalue
+
+def L2_normalization(data):
+    if type(data) == dict or type(data) == defaultdict or type(data) == Counter:
+        norm_data = {}
+        norm_val = 0.0
+        for key in data:
+            norm_val += data[key]**2
+        norm_val = norm_val**0.5
+        for key in data:
+            norm_data[key] = data[key]/norm_val
+        return norm_data
+    
+    elif type(data) == list:
+        norm_val = sum([val**2 for val in data])**0.5
+        norm_data = [val/norm_val for val in data]
+        return norm_data
+
+        
+def preprocess_data(sentence_list,lowercase = True,lemmatize=True,stem=True):
+    preprocessed_data = [sentence for sentence in sentence_list]
+    if lowercase:
+        preprocessed_data = [sentence.lower() for sentence in preprocessed_data]
+    if lemmatize:
+        lemmatizer = WordNetLemmatizer()
+        lemmatizer_func = lemmatizer.lemmatize
+        preprocessed_data = [flatten([[lemmatizer_func(w).encode('utf-8') for w in word_tokenize(s)]  for s in sent_tokenize(sent.decode('utf-8'))]) for sent in preprocessed_data]
+        preprocessed_data = [' '.join(word_list) for word_list in preprocessed_data]
+   
+    return preprocessed_data
+
+def generate_features(sentence_list,vocab_limit,num_features,feature_type='words'):
+    feature_list = []
+    
+    if feature_type == 'words':
+        feature_list = [flatten([[word.encode('utf-8') for word in word_tokenize(s)] for s in sent_tokenize(sent.decode('utf-8'))]) for sent in sentence_list]
+
+    elif feature_type == 'pos':
+        print 'Starting Parsing...this may take a while'
+        feature_list = [flatten([[pos for word,pos in pos_tag(word_tokenize(s))] for s in sent_tokenize(sent.decode('utf-8'))]) for sent in sentence_list]
+        print 'Parsing completed'
+
+    elif feature_type == 'func_words':
+        file_list = get_all_files('data/Function_Words')
+        func_word_list = []
+        for f in file_list:
+            f_handle = open(f,'r')
+            func_word_list += [word.strip().lower() for word in f_handle if word[0]!='/']
+            f_handle.close()
+        feature_list = [flatten([[word.encode('utf-8') for word in word_tokenize(s) if word.encode('utf-8') in func_word_list] for s in sent_tokenize(sent.decode('utf-8'))]) for sent in sentence_list]
+    vocab = create_vocab(flatten(feature_list),vocab_limit,num_features)
+    vocab.sort()
+    return vocab,feature_list
