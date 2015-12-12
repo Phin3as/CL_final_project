@@ -3,12 +3,153 @@ __author__ = 'Sajal'
 from tmp_util import *
 from math import sqrt
 from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression,Perceptron
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.lda import LDA
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.mixture import GMM
+from sklearn.decomposition import SparsePCA
 
 def all_zero(X_train,Y_train,X_test):
     return [0]*len(X_test)
 
 def all_one(X_train,Y_train,X_test):
     return [1]*len(X_test)
+
+def GMM_driver(X_train,Y_train,X_test):
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    features_train = format_features_sklearn(sentence_label_list_train,vocab_train,'tf-idf')
+    features_test = format_features_sklearn(sentence_label_list_test,vocab_train,'tf-idf')
+    
+    model = GMM(n_components = 10)
+    model.fit(features_train)
+    labels_train = model.predict(features_train)
+    decisions = {}
+    index_author = [i for i in range(len(Y_train)) if Y_train[i]==1]
+    index_other = [i for i in range(len(Y_train)) if Y_train[i] == 0]
+    likely_labels = {i : [] for i in list(set(labels_train))}
+    for i,e in enumerate(labels_train):
+        likely_labels[e] += [Y_train[i]]
+    for i in likely_labels:
+        likely_labels[i] = 1 if sum(likely_labels[i]) > len(likely_labels[i])/2.0 else 0
+    
+    labels = model.predict(features_test)
+    predicted_labels = []
+    for i in labels:
+        predicted_labels +=[likely_labels[i]]
+    return predicted_labels
+    #predicted_labels = model.predict(features_test)
+    
+    #return predicted_labels
+
+def knn_driver(X_train,Y_train,X_test):
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    features_train = format_features_sklearn(sentence_label_list_train,vocab_train,'tf-idf')
+    features_test = format_features_sklearn(sentence_label_list_test,vocab_train,'tf-idf')
+    
+    model = KNeighborsClassifier()
+    model.fit(features_train,Y_train)
+    
+    predicted_labels = model.predict(features_test)
+    
+    return predicted_labels
+
+def perceptron_driver(X_train,Y_train,X_test):
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    features_train = format_features_sklearn(sentence_label_list_train,vocab_train,'tf-idf')
+    features_test = format_features_sklearn(sentence_label_list_test,vocab_train,'tf-idf')
+    
+    model = Perceptron()
+    model.fit(features_train,Y_train)
+    
+    predicted_labels = model.predict(features_test)
+    
+    return predicted_labels
+
+def LDA_driver(X_train,Y_train,X_test):
+    
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    features_train = format_features_sklearn(sentence_label_list_train,vocab_train,'tf-idf')
+    features_test = format_features_sklearn(sentence_label_list_test,vocab_train,'tf-idf')
+    
+    model = LDA()
+    model.fit(features_train,Y_train)
+    
+    predicted_labels = model.predict(features_test)
+    
+    return predicted_labels
+
+def NB_driver(X_train,Y_train,X_test):
+    #X_train_prep = preprocess_data(X_train)
+    #X_test_prep = preprocess_data(X_test)
+    
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    features_train = format_features_sklearn(sentence_label_list_train,vocab_train)
+    features_test = format_features_sklearn(sentence_label_list_test,vocab_train)
+    
+    model = GaussianNB()
+    model.fit(features_train,Y_train)
+    
+    predicted_labels = model.predict(features_test)
+    
+    return predicted_labels
+
+def AdaBoost_driver(X_train,Y_train,X_test):
+    #X_train_prep = preprocess_data(X_train)
+    #X_test_prep = preprocess_data(X_test)    
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+    
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    features_train = format_features_sklearn(sentence_label_list_train,vocab_train)
+    features_test = format_features_sklearn(sentence_label_list_test,vocab_train)
+    
+    model = AdaBoostClassifier(n_estimators = 10000)
+    model.fit(features_train,Y_train)
+    
+    predicted_labels = model.predict(features_test)
+    
+    return predicted_labels
 
 
 class NGram:
@@ -70,14 +211,14 @@ def NGram_driver(X_train,Y_train,X_test):
     author_train = [X_train[i] for i in range(len(Y_train)) if Y_train[i] == 1]
     other_train = [X_train[i] for i in range(len(Y_train)) if Y_train[i]==0]
 
-    model_author = NGram(author_train,2,'words')
-    model_other = NGram(other_train,2,'words')
+    model_author = NGram(author_train,3,'words')
+    model_other = NGram(other_train,3,'words')
     
     predicted_labels = []
     for sentence in X_test:
         author_prob = model_author.log_prob(sentence)
         other_prob = model_other.log_prob(sentence)
-        print author_prob,other_prob
+        
         if author_prob == None:
             predicted_labels+=[0]
         elif other_prob == None:
@@ -88,9 +229,11 @@ def NGram_driver(X_train,Y_train,X_test):
             predicted_labels+=[0]
     return predicted_labels
 
-def svm_driver_sklearn(X_train,Y_train,X_test):
+
+def logistic_driver(X_train,Y_train,X_test):
     #X_train_prep = preprocess_data(X_train)
     #X_test_prep = preprocess_data(X_test)
+
     
     X_train_prep = X_train
     X_test_prep = X_test
@@ -100,15 +243,62 @@ def svm_driver_sklearn(X_train,Y_train,X_test):
     sentence_label_list_train = zip(transformed_train_X,Y_train)
     sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
 
-    features_train = generate_svm_features_sklearn(sentence_label_list_train,vocab_train)
-    features_test = generate_svm_features_sklearn(sentence_label_list_test,vocab_train)
+    features_train_count = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='tf-idf')
+    features_test_count = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='tf-idf')
     
+    features_train_type_token = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='type-token')
+    features_test_type_token = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='type-token')
+    
+    features_train = join_features(features_train_count,features_train_type_token)
+    features_test = join_features(features_test_count,features_test_type_token)
+    
+    
+    model = LogisticRegression()
+    model.fit(features_train,Y_train)
+    
+    predicted_labels = model.predict(features_test)
+    
+    return predicted_labels
+
+def kernel_intersection(A,B):
+    kernel_mat = [[0 for j in B] for i in A]
+    for i in range(len(A)):
+        for j in range(i,len(B)):
+            kernel_mat[i][j] = sum([min(k,l) for k,l in zip(A[i],B[j])])
+            kernel_mat[j][i] = kernel_mat[i][j]
+    return kernel_mat
+
+def svm_driver_sklearn(X_train,Y_train,X_test):
+    #X_train_prep = preprocess_data(X_train)
+    #X_test_prep = preprocess_data(X_test)
+    
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+    
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[0]*len(X_test))
+
+    features_train_counts = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='tf-idf')
+    features_test_counts = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='tf-idf')
+    
+    #features_train_length = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='length')
+    #features_test_length = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='length')
+    
+    #features_train_type_token = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='type-token')
+    #features_test_type_token = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='type-token')
+    
+    features_train = features_train_counts#,features_train_type_token)
+    features_test = features_test_counts#,features_test_type_token)
+
     svm_model = SVC()
     svm_model.fit(features_train,Y_train)
-    print svm_model.predict(features_test)
+    
+    #return features_train,features_test
     return svm_model.predict(features_test)
 
-def generate_svm_features_sklearn(feature_label_list,vocab,normalize=False):
+def format_features_sklearn(feature_label_list,vocab,normalize=False,data_type='counts'):
     label_list = [label for feat,label in feature_label_list]
     feat_list = [feat for feat,label in feature_label_list]
     
@@ -120,23 +310,46 @@ def generate_svm_features_sklearn(feature_label_list,vocab,normalize=False):
     label_feature_space = {label : str(i) for i,label in enumerate(unique_labels)}
     
     feature_space = []
-    for index,words_list in enumerate(feat_list):
-        counts = Counter(words_list)
-        if normalize:
-            counts = L2_normalization(counts)
-        feature_list = []
-        for w in vocab_feature_space:
-            if w in counts:
-                feature_list+=[counts[w]]
-            else:
-                feature_list+=[0]
-        feature_space+=[feature_list]
-                
-        #output_file_handle.write(' '.join(feature_list)+"\n")
+    if data_type == 'counts':
+        for index,words_list in enumerate(feat_list):
+            counts = Counter(words_list)
+            if normalize:
+                counts = L2_normalization(counts)
+            feature_list = []
+            for w in vocab_feature_space:
+                if w in counts:
+                    feature_list+=[counts[w]]
+                else:
+                    feature_list+=[0]
+            feature_space+=[feature_list]
 
-    return feature_space
-    #output_file_handle.close()
+
+    elif data_type == 'tf-idf':
+        unique_word_doc = [list(set(i)) for i in feat_list]
+        doc_counts = Counter(flatten(unique_word_doc))
+        N = len(feat_list)
+        for index,word_list in enumerate(feat_list):
+            feature_list = []
+            tf = Counter(word_list)
+            unique_words = list(set(word_list))
+            for w in vocab_feature_space:
+                if w in unique_words:
+                    feature_list+=[tf[w]*log(N*1.0/doc_counts[w])]
+                else:
+                    feature_list+=[0]
+            feature_space+=[feature_list]
     
+    elif data_type == 'type-token':
+        for index,word_list in enumerate(feat_list):
+            types = len(list(set(word_list)))
+            tokens = len(word_list)
+            feature_space+=[[types/float(tokens)]]
+    
+    elif data_type == 'length':
+        for index,word_list in enumerate(feat_list):
+            feature_space+=[[len(word_list)]]
+    return feature_space
+
 '''Harshal : Adding function svm_driver to perform svm and be used by cross validation
 
 Description:
@@ -159,17 +372,19 @@ def svm_driver(X_train, Y_train, X_test):
     X_train_prep = preprocess_data(X_train)
     X_test_prep = preprocess_data(X_test)
     
+    #X_test_prep = X_test
+    #X_train_prep = X_train
     vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'func_words')
     vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'func_words')
 
     sentence_label_list_train = zip(transformed_train_X,Y_train)
-    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+    sentence_label_list_test = zip(transformed_test_X,[0]*len(X_test))
 
     outputfile_path_train = 'DataGen/models_train_svm'
     outputfile_path_test = 'DataGen/models_test_svm'
 
-    generate_svm_files(sentence_label_list_train,vocab_train,outputfile_path_train,normalize=True)
-    generate_svm_files(sentence_label_list_test,vocab_train,outputfile_path_test,normalize=True)
+    generate_svm_files(sentence_label_list_train,vocab_train,outputfile_path_train,normalize=False)
+    generate_svm_files(sentence_label_list_test,vocab_train,outputfile_path_test,normalize=False)
 
     predicted_labels = train_test_model(outputfile_path_train,outputfile_path_test)
     
@@ -211,7 +426,6 @@ def generate_svm_files(feature_label_list, vocab, output_file,normalize=False):
         output_file_handle.write(' '.join(feature_list)+"\n")
 
     output_file_handle.close()
-
 
 
 '''Harshal : Adding function train_test_model
@@ -278,7 +492,7 @@ def KL_Classifier(train_X, train_Y, test_X):
         kl_value_author = KLDivergence(word_dist,author_excerpts_word_dist)
         kl_value_other = KLDivergence(word_dist,others_excerpts_word_dist)
 
-        if kl_value_author < kl_value_other:
+        if kl_value_author > kl_value_other:
             test_Y.append(0)
         else:
             test_Y.append(1)

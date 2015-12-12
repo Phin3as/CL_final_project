@@ -6,6 +6,7 @@ from nltk import word_tokenize,sent_tokenize,pos_tag
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from math import log
+from multiprocessing import Process,Queue
 
 __author__ = 'Sajal/Harshal'
 
@@ -132,6 +133,10 @@ def normalize_data(word_freq_train,word_freq_test):
 
     return word_freq_train,word_freq_test
 
+
+
+def join_features(A,B):
+    return [i+j for i,j in zip(A,B)]
 
 ''' Harshal : Including Function get_all_files()
 
@@ -314,7 +319,7 @@ def preprocess_data(sentence_list,lowercase = True,lemmatize=True,stem=True):
    
     return preprocessed_data
 
-def generate_features(sentence_list,vocab_limit,num_features,feature_type='words'):
+def generate_features(sentence_list,vocab_limit=1,num_features=1000,feature_type='words'):
     feature_list = []
     
     if feature_type == 'words':
@@ -322,7 +327,16 @@ def generate_features(sentence_list,vocab_limit,num_features,feature_type='words
 
     elif feature_type == 'pos':
         print 'Starting Parsing...this may take a while'
-        feature_list = [flatten([[pos for word,pos in pos_tag(word_tokenize(s))] for s in sent_tokenize(sent.decode('utf-8'))]) for sent in sentence_list]
+        
+        #feature_list = [flatten([[pos for word,pos in pos_tag(word_tokenize(s))] for s in sent_tokenize(sent.decode('utf-8'))]) for sent in sentence_list]
+        google_lookup = get_google_pos('data/google_pos')
+        for e in sentence_list:
+            sent_list = sent_tokenize(e.decode('utf-8'))
+            pos_list = []
+            for s in sent_list:
+                pos_list += [google_lookup[pos] for word,pos in pos_tag(word_tokenize(s))]
+            print '.',
+            feature_list += [pos_list]
         print 'Parsing completed'
 
     elif feature_type == 'func_words':
@@ -336,3 +350,34 @@ def generate_features(sentence_list,vocab_limit,num_features,feature_type='words
     vocab = create_vocab(flatten(feature_list),vocab_limit,num_features)
     vocab.sort()
     return vocab,feature_list
+
+def pos_tagging_parallel(sentence_list,Output_Queue):
+    
+    Output_Queue.put(feature_list)
+
+
+def mapper(inputlist, num_splits):
+    temp_list = [i for i in inputlist]
+    num_ele_per_split = len(temp_list)/num_splits
+    segments = [[] for i in range(num_splits)]
+    for index,element in enumerate(temp_list):
+        segments[index%num_splits].append(element)
+    segments = filter(None,segments)
+    return segments
+
+
+def get_google_pos(f):
+    f_handle = open(f,"r")
+    google_dict = defaultdict(lambda : "NOUN")
+    for line in f_handle:
+        key,value = line.strip().split()
+        google_dict[key] = value
+    return google_dict
+
+
+def write_features_to_file(features,file_name):
+    file_handle = open(file_name,'w',seperator)
+    for i in features:
+        a = seperator.join([str(k) for k in i])
+        file_handle.write(a+"\n")
+    file_handle.close()

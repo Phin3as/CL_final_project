@@ -2,9 +2,10 @@ __author__ = 'Sajal'
 from random import shuffle
 
 def cross_validation(X_train, Y_train, K, model):
-    X_train = list(X_train)
-    shuffle(X_train)
-
+    temp = zip(X_train,Y_train)
+    shuffle(temp)
+    X_train = [feat for feat,label in temp]
+    Y_train = [label for feat,label in temp]
     acc=0
     for k in range(K):
         training_x = [x for i,x in enumerate(X_train) if i % K != k]
@@ -13,6 +14,7 @@ def cross_validation(X_train, Y_train, K, model):
         testing_y = [y for i,y in enumerate(Y_train) if i % K == k]
         predicted_labels = model(training_x,training_y,testing_x)
         count=0
+        
         for i in range(len(testing_y)):
             if testing_y[i]==predicted_labels[i]:
                 count+=1
@@ -29,7 +31,10 @@ def cross_validation_random_partition(X_train, Y_train, K,model):
     train_prop = 0.8
     acc = 0
     for k in range(K):
-        shuffle(X_train)
+        temp = zip(X_train,Y_train)
+        shuffle(temp)
+        X_train = [feat for feat,label in temp]
+        Y_train = [label for feat,label in temp]
         train_x = X_train[0:int(train_prop*len(X_train))]
         test_x = X_train[int(train_prop*len(X_train))+1:]
         
