@@ -1,0 +1,4 @@
+genders_train = importdata('C:\Users\Sajal\Documents\git\CL_final_project\train_features_counts.txt');
+words_train = importdata('C:\Users\Sajal\Documents\git\CL_final_project\test_labels.txt');
+
+words_test = importdata('C:\Users\Sajal\Documents\git\CL_final_project\test_features_counts.txt');

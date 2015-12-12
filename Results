@@ -1,2 +1,4 @@
 SVM Baseline : 93% ( ran it once on one random iteration)
 All 0 : 79.10%
+20-NN : 79.105%
+Logistic Reg: 88.409%
