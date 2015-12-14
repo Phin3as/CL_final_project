@@ -1,6 +1,6 @@
 function predicted_label = predict_k_means(X_train, Y_train, X_test)
 
-k=20;
+k=60;
 
 cos_sim = @(x,y) dot(x,y)./(norm(x,2)*norm(y,2));
 
@@ -26,7 +26,7 @@ for i=1:size(X_test,1)
         cos_sim_matrix(j)=cos_sim(old_cluster,new_person);
     end
     [sajal,sajal_idx] = sort(cos_sim_matrix,'descend');
-    idx = sajal_idx(1:1,:); %num of closest clusters to pick
+    idx = sajal_idx(1:5,:); %num of closest clusters to pick
     gender = mean(labels(idx,:));
     if gender > 0.5
         gender=1;

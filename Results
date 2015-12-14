@@ -1,4 +1,16 @@
 SVM Baseline : 93% ( ran it once on one random iteration)
 All 0 : 79.10%
+
+Top 1000 words:
 20-NN : 79.105%
 Logistic Reg: 88.409%
+libSVM : 89.265%
+DT: 80.789%
+K(100) means + K(19) NN:79%
+K(20) means + K(1) NN:78.5%
+K(40) means + K(3) NN:78.3%
+K(60) means + K(5) NN:79.5%
+
+Top 1000 words(normalized data):
+Logistic Reg:
+libSVM :
