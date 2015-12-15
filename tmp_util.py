@@ -340,8 +340,8 @@ def generate_features(sentence_list,vocab_limit=1,num_features=1000,feature_type
         print 'Parsing completed'
 
     elif feature_type == 'func_words':
-        #file_list = get_all_files('data/Function_Words')
-        file_list = ['data/func_wan.txt']
+        file_list = get_all_files('data/Function_Words')
+        #file_list = ['data/func_wan.txt']
         func_word_list = []
         for f in file_list:
             f_handle = open(f,'r')

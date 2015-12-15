@@ -1,6 +1,9 @@
 
 
 from tmp_util import *
+from numpy.linalg import matrix_power
+from numpy import allclose,copy
+import numpy as np
 
 class WAN:
     
@@ -8,7 +11,8 @@ class WAN:
     word_mat = None
     window_size = None
     alpha = None
-    
+    limiting_dist = None
+        
     def similarity(self,P2):
         prob = []
         for i in P2.word_mat:

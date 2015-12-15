@@ -5,7 +5,7 @@ from math import sqrt
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression,Perceptron,SGDClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier,RandomForestClassifier
 from sklearn.lda import LDA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.mixture import GMM
@@ -17,11 +17,30 @@ def all_zero(X_train,Y_train,X_test):
 def all_one(X_train,Y_train,X_test):
     return [1]*len(X_test)
 
+def RandomForest_driver(X_train,Y_train,X_test):
+    X_train_prep = X_train
+    X_test_prep = X_test
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+
+    sentence_label_list_train = zip(transformed_train_X,Y_train)
+    sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
+
+    features_train = format_features_sklearn(sentence_label_list_train,vocab_train,'tf-idf')
+    features_test = format_features_sklearn(sentence_label_list_test,vocab_train,'tf-idf')
+    
+    model = RandomForestClassifier(n_estimators = 10000)
+    model.fit(features_train,Y_train)
+    labels = model.predict(features_test)
+    return labels
+
 def Ensemble_driver(X_train,Y_train,X_test):
     
     svm_labels = svm_driver_sklearn(X_train,Y_train,X_test)
     lda_labels = LDA_driver(X_train,Y_train,X_test)
     logistic_labels = logistic_driver(X_train,Y_train,X_test)
+    #logistic_labels_prob = logistic_driver(X_train,Y_train,X_test,True)
+
     #adaboost_labels = logistic_driver(X_train,Y_train,X_test)
     
     predicted_labels = [svm_labels[i]+lda_labels[i]+logistic_labels[i] for i in range(len(svm_labels))]
@@ -125,8 +144,8 @@ def LDA_driver(X_train,Y_train,X_test):
     
     X_train_prep = X_train
     X_test_prep = X_test
-    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
-    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,5000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,5000,'words')
 
     sentence_label_list_train = zip(transformed_train_X,Y_train)
     sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
@@ -134,15 +153,15 @@ def LDA_driver(X_train,Y_train,X_test):
     features_train = format_features_sklearn(sentence_label_list_train,vocab_train,'tf-idf')
     features_test = format_features_sklearn(sentence_label_list_test,vocab_train,'tf-idf')
     
-    pca = PCA(n_components = 800)
-    pca.fit(features_train)
-    pca_features_train = pca.transform(features_train)
-    pca_features_test = pca.transform(features_test)
+    #pca = PCA(n_components = 800)
+    #pca.fit(features_train)
+    #pca_features_train = pca.transform(features_train)
+    #pca_features_test = pca.transform(features_test)
 
     model = LDA()
-    model.fit(pca_features_train,Y_train)
+    model.fit(features_train,Y_train)
     
-    predicted_labels = model.predict(pca_features_test)
+    predicted_labels = model.predict(features_test)
     
     return predicted_labels
 
@@ -152,8 +171,8 @@ def NB_driver(X_train,Y_train,X_test):
     
     X_train_prep = X_train
     X_test_prep = X_test
-    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
-    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'pos')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'pos')
 
     sentence_label_list_train = zip(transformed_train_X,Y_train)
     sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
@@ -249,8 +268,8 @@ def NGram_driver(X_train,Y_train,X_test):
     author_train = [X_train[i] for i in range(len(Y_train)) if Y_train[i] == 1]
     other_train = [X_train[i] for i in range(len(Y_train)) if Y_train[i]==0]
 
-    model_author = NGram(author_train,3,'words')
-    model_other = NGram(other_train,3,'words')
+    model_author = NGram(author_train,3,'pos')
+    model_other = NGram(other_train,3,'pos')
     
     predicted_labels = []
     for sentence in X_test:
@@ -268,11 +287,9 @@ def NGram_driver(X_train,Y_train,X_test):
     return predicted_labels
 
 
-def logistic_driver(X_train,Y_train,X_test):
+def logistic_driver(X_train,Y_train,X_test,proba=False):
     #X_train_prep = preprocess_data(X_train)
     #X_test_prep = preprocess_data(X_test)
-
-    
     X_train_prep = X_train
     X_test_prep = X_test
     vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
@@ -284,8 +301,8 @@ def logistic_driver(X_train,Y_train,X_test):
     sentence_label_list_train = zip(transformed_train_X,Y_train)
     sentence_label_list_test = zip(transformed_test_X,[1]*len(X_test))
 
-    features_train_count = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='tf-idf')
-    features_test_count = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='tf-idf')
+    features_train_count = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='counts')
+    features_test_count = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='counts')
     
     #features_train_type_token = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='type-token')
     #features_test_type_token = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='type-token')
@@ -294,15 +311,20 @@ def logistic_driver(X_train,Y_train,X_test):
     #features_test_func = format_features_sklearn(sentence_label_list_test,vocab_train_func,data_type='tf-idf')
 
     features_train = features_train_count#join_features(features_train_count,features_train_func)
-    features_test = features_train_count#join_features(features_test_count,features_test_func)
-    
+    features_test = features_test_count#join_features(features_test_count,features_test_func)
     
     model = LogisticRegression()
     model.fit(features_train,Y_train)
     
-    predicted_labels = model.predict(features_test)
+    predicted_labels = []
     
-    return predicted_labels
+    if proba:
+        conf = model.predict_proba(features_test)
+        predicted_labels = [conf[i][1]-conf[i][0] for i in range(len(conf))]
+        return predicted_labels
+    else:
+        predicted_labels = model.predict(features_test)
+        return predicted_labels
 
 def kernel_intersection(A,B):
     kernel_mat = [[0 for j in B] for i in A]
@@ -313,31 +335,40 @@ def kernel_intersection(A,B):
     return kernel_mat
 
 def svm_driver_sklearn(X_train,Y_train,X_test):
-    #X_train_prep = preprocess_data(X_train)
-    #X_test_prep = preprocess_data(X_test)
+    X_train_prep = preprocess_data(X_train,lemmatize=False,stem=False)
+    X_test_prep = preprocess_data(X_test,lemmatize=False,stem=False)
     
-    X_train_prep = X_train
-    X_test_prep = X_test
+    #X_train_prep = X_train
+    #X_test_prep = X_test
     vocab_train,transformed_train_X = generate_features(X_train_prep,1,1500,'words')
     vocab_test, transformed_test_X = generate_features(X_test_prep,1,1500,'words')
 
-    vocab_train_func,transformed_train_X_func = generate_features(X_train_prep,1,1500,'func_words')
-    vocab_test_func, transformed_test_X_func = generate_features(X_test_prep,1,1500,'func_words')
-    
+    vocab_train_pos,transformed_train_X_pos = generate_features(X_train_prep,1,1500,'func_words')
+    vocab_test_pos, transformed_test_X_pos = generate_features(X_test_prep,1,1500,'func_words')
+
     sentence_label_list_train = zip(transformed_train_X,Y_train)
     sentence_label_list_test = zip(transformed_test_X,[0]*len(X_test))
 
     features_train_counts = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='tf-idf')
     features_test_counts = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='tf-idf')
     
-    features_train_func = format_features_sklearn(sentence_label_list_train,vocab_train_func,data_type='tf-idf')
-    features_test_func = format_features_sklearn(sentence_label_list_test,vocab_train_func,data_type='tf-idf')
+    features_train_pos = format_features_sklearn(sentence_label_list_train,vocab_train_func,data_type='tf-idf')
+    features_test_pos = format_features_sklearn(sentence_label_list_test,vocab_train_func,data_type='tf-idf')
     
-    #features_train_type_token = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='type-token')
-    #features_test_type_token = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='type-token')
+    features_train_type_token = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='type-token')
+    features_test_type_token = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='type-token')
     
-    features_train = join_features(features_train_counts,features_train_func)
-    features_test = join_features(features_test_counts,features_test_func)
+    #features_train_length = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='length')
+    #features_test_length = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='length')
+    
+    #features_train = join_features(features_train_counts,features_train_pos)
+    #features_test = join_features(features_test_counts,features_test_pos)
+    
+    features_train = join_features(features_train_counts,features_train_type_token)
+    features_test = join_features(features_test_counts,features_test_type_token)
+
+    #features_train = join_features(features_train,features_train_length)
+    #features_test = join_features(features_test,features_test_length)
 
     svm_model = SVC()
     svm_model.fit(features_train,Y_train)
@@ -421,8 +452,8 @@ def svm_driver(X_train, Y_train, X_test):
     
     #X_test_prep = X_test
     #X_train_prep = X_train
-    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'func_words')
-    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'func_words')
+    vocab_train,transformed_train_X = generate_features(X_train_prep,1,1000,'words')
+    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1000,'words')
 
     sentence_label_list_train = zip(transformed_train_X,Y_train)
     sentence_label_list_test = zip(transformed_test_X,[0]*len(X_test))
@@ -491,7 +522,7 @@ Output:
 def train_test_model(train_datafile, test_datafile):
     y_train, x_train = svm_read_problem(train_datafile)
     problem = svm_problem(y_train, x_train)
-    param = svm_parameter('-t 0 -e .01 -m 1000 -h 0')
+    param = svm_parameter('-t 2 -g 0.01 -c 10 -e .001 -m 1000 -b 1')
     m = svm_train(problem,param)
     Y_test, X_test = svm_read_problem(test_datafile)
     p_labels, p_acc, p_vals = svm_predict(Y_test,X_test,m)

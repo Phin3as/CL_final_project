@@ -43,7 +43,7 @@ def cross_validation_random_partition(X_train, Y_train, K,model):
 
         predicted_labels = model(train_x,train_y,test_x)
         acc_i = sum([1 if predicted_labels[i]==test_y[i] else 0 for i in range(len(test_y))])
-        acc+=acc_i
+        acc+=acc_i/float(len(test_y))
         print 'Iteration',k+1,'Accuracy',acc_i/float(len(test_y))
     print 'Mean Accuracy',acc/float(K)
     return acc/float(K)
