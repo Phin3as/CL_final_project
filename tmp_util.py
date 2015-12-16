@@ -319,7 +319,7 @@ def preprocess_data(sentence_list,lowercase = True,lemmatize=True,stem=True):
    
     return preprocessed_data
 
-def generate_features(sentence_list,vocab_limit=1,num_features=1000,feature_type='words'):
+def generate_features(sentence_list,vocab_limit=1,num_features=1000,feature_type='words',ngram=False,ngram_count = 2):
     feature_list = []
     
     if feature_type == 'words':
@@ -328,14 +328,12 @@ def generate_features(sentence_list,vocab_limit=1,num_features=1000,feature_type
     elif feature_type == 'pos':
         print 'Starting Parsing...this may take a while'
         
-        #feature_list = [flatten([[pos for word,pos in pos_tag(word_tokenize(s))] for s in sent_tokenize(sent.decode('utf-8'))]) for sent in sentence_list]
         google_lookup = get_google_pos('data/google_pos')
         for e in sentence_list:
             sent_list = sent_tokenize(e.decode('utf-8'))
             pos_list = []
             for s in sent_list:
                 pos_list += [google_lookup[pos] for word,pos in pos_tag(word_tokenize(s))]
-            print '.',
             feature_list += [pos_list]
         print 'Parsing completed'
 
@@ -348,9 +346,26 @@ def generate_features(sentence_list,vocab_limit=1,num_features=1000,feature_type
             func_word_list += [word.strip().lower() for word in f_handle if word[0]!='/']
             f_handle.close()
         feature_list = [flatten([[word.encode('utf-8') for word in word_tokenize(s) if word.encode('utf-8') in func_word_list] for s in sent_tokenize(sent.decode('utf-8'))]) for sent in sentence_list]
-    vocab = create_vocab(flatten(feature_list),vocab_limit,num_features)
-    vocab.sort()
-    return vocab,feature_list
+
+    elif feature_type == 'char':
+        for sent in sentence_list:
+            sent_list = sent_tokenize(sent.decode('utf-8'))
+            word_list = flatten([word_tokenize(s) for s in sent_list])
+            feature_list +=[flatten([[char for char in word.encode('utf-8')] for word in word_list])]
+    
+    final_feature_list = []
+    
+    if ngram:
+        for f in feature_list:
+            f_list = []
+            for i in range(len(f)-ngram_count+1):
+                f_list+=[tuple(f[i:i+ngram_count])]
+            final_feature_list+=[f_list]
+    else:
+        final_feature_list = feature_list
+    vocab = create_vocab(flatten(final_feature_list),vocab_limit,num_features)
+    #vocab.sort()
+    return vocab,final_feature_list
 
 def pos_tagging_parallel(sentence_list,Output_Queue):
     

@@ -341,35 +341,44 @@ def svm_driver_sklearn(X_train,Y_train,X_test):
     #X_train_prep = X_train
     #X_test_prep = X_test
     vocab_train,transformed_train_X = generate_features(X_train_prep,1,1500,'words')
-    vocab_test, transformed_test_X = generate_features(X_test_prep,1,1500,'words')
-
-    vocab_train_pos,transformed_train_X_pos = generate_features(X_train_prep,1,1500,'func_words')
-    vocab_test_pos, transformed_test_X_pos = generate_features(X_test_prep,1,1500,'func_words')
-
+    vocab_test,transformed_test_X = generate_features(X_test_prep,1,1500,'words')
+    
+    vocab_train_char,transformed_train_X_char = generate_features(X_train_prep,1,1000,'char',ngram=True,ngram_count = 3)
+    vocab_test_char,transformed_test_X_char = generate_features(X_test_prep,1,1000,'char',ngram=True,ngram_count = 3)
+    
+    vocab_train_char2,transformed_train_X_char2 = generate_features(X_train_prep,1,100,'words',ngram=True,ngram_count = 3)
+    vocab_test_char2,transformed_test_X_char2 = generate_features(X_test_prep,1,1000,'words',ngram=True,ngram_count = 3)
+    
     sentence_label_list_train = zip(transformed_train_X,Y_train)
     sentence_label_list_test = zip(transformed_test_X,[0]*len(X_test))
 
+    sentence_label_list_train_char = zip(transformed_train_X_char,Y_train)
+    sentence_label_list_test_char = zip(transformed_test_X_char,[0]*len(X_test))
+    
+    sentence_label_list_train_char2 = zip(transformed_train_X_char2,Y_train)
+    sentence_label_list_test_char2 = zip(transformed_test_X_char2,[0]*len(X_test))
+    
     features_train_counts = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='tf-idf')
     features_test_counts = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='tf-idf')
+
+    features_train_char = format_features_sklearn(sentence_label_list_train_char,vocab_train_char,data_type='tf-idf')
+    features_test_char = format_features_sklearn(sentence_label_list_test_char,vocab_train_char,data_type='tf-idf')
     
-    features_train_pos = format_features_sklearn(sentence_label_list_train,vocab_train_func,data_type='tf-idf')
-    features_test_pos = format_features_sklearn(sentence_label_list_test,vocab_train_func,data_type='tf-idf')
+
+    features_train_char2 = format_features_sklearn(sentence_label_list_train_char2,vocab_train_char2,data_type='tf-idf')
+    features_test_char2 = format_features_sklearn(sentence_label_list_test_char2,vocab_train_char2,data_type='tf-idf')
     
     features_train_type_token = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='type-token')
     features_test_type_token = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='type-token')
     
-    #features_train_length = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='length')
-    #features_test_length = format_features_sklearn(sentence_label_list_test,vocab_train,data_type='length')
-    
-    #features_train = join_features(features_train_counts,features_train_pos)
-    #features_test = join_features(features_test_counts,features_test_pos)
-    
     features_train = join_features(features_train_counts,features_train_type_token)
     features_test = join_features(features_test_counts,features_test_type_token)
 
-    #features_train = join_features(features_train,features_train_length)
-    #features_test = join_features(features_test,features_test_length)
+    features_train = join_features(features_train,features_train_char)
+    features_test = join_features(features_test,features_test_char)
 
+    features_train = join_features(features_train,features_train_char2)
+    features_test = join_features(features_test,features_test_char2)
     svm_model = SVC()
     svm_model.fit(features_train,Y_train)
     
