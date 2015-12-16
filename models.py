@@ -346,8 +346,8 @@ def svm_driver_sklearn(X_train,Y_train,X_test):
     vocab_train_char,transformed_train_X_char = generate_features(X_train_prep,1,1000,'char',ngram=True,ngram_count = 3)
     vocab_test_char,transformed_test_X_char = generate_features(X_test_prep,1,1000,'char',ngram=True,ngram_count = 3)
     
-    vocab_train_char2,transformed_train_X_char2 = generate_features(X_train_prep,1,100,'words',ngram=True,ngram_count = 3)
-    vocab_test_char2,transformed_test_X_char2 = generate_features(X_test_prep,1,1000,'words',ngram=True,ngram_count = 3)
+    vocab_train_char2,transformed_train_X_char2 = generate_features(X_train_prep,1,100,'words',ngram=True,ngram_count = 2)
+    vocab_test_char2,transformed_test_X_char2 = generate_features(X_test_prep,1,100,'words',ngram=True,ngram_count = 2)
     
     sentence_label_list_train = zip(transformed_train_X,Y_train)
     sentence_label_list_test = zip(transformed_test_X,[0]*len(X_test))

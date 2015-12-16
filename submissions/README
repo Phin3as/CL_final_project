@@ -1,0 +1,19 @@
+
+
+To execute import script.py
+
+
+Then load data using :
+
+train_X,train_Y,test_X = load_data()
+
+note that this will require data to be present in the data directory.
+
+Then call the appropriate driver function. For our final submissions call :
+
+predicted_labels = svm_driver_sklearn(train_X,train_Y,test_X)
+
+
+Other models are present in the models.py file.
+
+

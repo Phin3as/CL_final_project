@@ -1,0 +1,12 @@
+Number of Examples Before preprocessing 2531 9582
+Average Length of Examples Before preprocessing 990.221651521 1036.42485911
+Sentences per excerpt Before preprocessing 8.66258395891 8.24733876018
+Words per excerpt Before preprocessing 8.66258395891 8.24733876018
+Number of Examples 2531 9582
+Average Length of Examples 990.221651521 1036.42485911
+Sentences per excerpt 8.53259581193 8.07712377374
+Words per excerpt 8.53259581193 8.07712377374
+Unique Author and Other 19051 35337
+Total Author and Other 484507 1868206
+Words used by author but not by others and in vocabulary 57
+Words used by others but not by author and in vocabulary 205

@@ -1,3 +1,5 @@
+
+import script
 from script import *
 
 
@@ -12,8 +14,32 @@ print 'Average Length of Examples Before preprocessing',sum([len(i) for i in aut
 
 print 'Sentences per excerpt Before preprocessing',sum([len(sent_tokenize(s.decode('utf-8'))) for s in author_data])/float(len(author_data)),sum([len(sent_tokenize(s.decode('utf-8'))) for s in other_data])/float(len(other_data))
 
-print 'Words per excerpt Before preprocessing',sum([len(sent_tokenize(s.decode('utf-8'))) for s in author_data])/float(len(author_data)),sum([len(sent_tokenize(s.decode('utf-8'))) for s in other_data])/float(len(other_data))
 
+print 'Words per excerpt Before preprocessing',sum([sum([len(word_tokenize(sent)) for sent in sent_tokenize(s.decode('utf-8'))]) for s in author_data])/float(len(author_data)),sum([sum([len(word_tokenize(sent)) for sent in sent_tokenize(s.decode('utf-8'))]) for s in other_data])/float(len(other_data))
+
+
+
+print 'Average Word length per excerpt Before preprocessing',sum([sum([sum([len(w) for w in word_tokenize(sent)]) for sent in sent_tokenize(s.decode('utf-8'))]) for s in author_data])/float(len(author_data)),sum([sum([sum([len(w) for w in word_tokenize(sent)]) for sent in sent_tokenize(s.decode('utf-8'))]) for s in other_data])/float(len(other_data))
+
+
+
+X_train_prep = preprocess_data(X_train,lemmatize=True,stem=False)
+X_test_prep = preprocess_data(X_test,lemmatize=True,stem=False)
+
+
+author_data = [X_train_prep[i] for i in range(len(X_train)) if Y_train[i]==1]
+other_data = [X_train_prep[i] for i in range(len(X_train)) if Y_train[i]==0]
+
+print 'Number of Examples with lemmatization',len(author_data),len(other_data)
+print 'Average Length of Examples with lemmatization',sum([len(i) for i in author_data])/float(len(author_data)),sum([len(i) for i in other_data])/float(len(other_data))
+
+print 'Sentences per excerpt with lemmatization',sum([len(sent_tokenize(s.decode('utf-8'))) for s in author_data])/float(len(author_data)),sum([len(sent_tokenize(s.decode('utf-8'))) for s in other_data])/float(len(other_data))
+
+print 'Words per excerpt with lemmatization',sum([sum([len(word_tokenize(sent)) for sent in sent_tokenize(s.decode('utf-8'))]) for s in author_data])/float(len(author_data)),sum([sum([len(word_tokenize(sent)) for sent in sent_tokenize(s.decode('utf-8'))]) for s in other_data])/float(len(other_data))
+
+
+
+print 'Average Word length per excerpt with lemmatization',sum([sum([sum([len(w) for w in word_tokenize(sent)]) for sent in sent_tokenize(s.decode('utf-8'))]) for s in author_data])/float(len(author_data)),sum([sum([sum([len(w) for w in word_tokenize(sent)]) for sent in sent_tokenize(s.decode('utf-8'))]) for s in other_data])/float(len(other_data))
 
 
 X_train_prep = preprocess_data(X_train,lemmatize=False,stem=False)
@@ -23,13 +49,15 @@ X_test_prep = preprocess_data(X_test,lemmatize=False,stem=False)
 author_data = [X_train_prep[i] for i in range(len(X_train)) if Y_train[i]==1]
 other_data = [X_train_prep[i] for i in range(len(X_train)) if Y_train[i]==0]
 
-print 'Number of Examples',len(author_data),len(other_data)
-print 'Average Length of Examples',sum([len(i) for i in author_data])/float(len(author_data)),sum([len(i) for i in other_data])/float(len(other_data))
+print 'Number of Examples without lemmatization',len(author_data),len(other_data)
+print 'Average Length of Examples without lemmatization',sum([len(i) for i in author_data])/float(len(author_data)),sum([len(i) for i in other_data])/float(len(other_data))
 
-print 'Sentences per excerpt',sum([len(sent_tokenize(s.decode('utf-8'))) for s in author_data])/float(len(author_data)),sum([len(sent_tokenize(s.decode('utf-8'))) for s in other_data])/float(len(other_data))
+print 'Sentences per excerpt without lemmatization',sum([len(sent_tokenize(s.decode('utf-8'))) for s in author_data])/float(len(author_data)),sum([len(sent_tokenize(s.decode('utf-8'))) for s in other_data])/float(len(other_data))
 
-print 'Words per excerpt',sum([len(sent_tokenize(s.decode('utf-8'))) for s in author_data])/float(len(author_data)),sum([len(sent_tokenize(s.decode('utf-8'))) for s in other_data])/float(len(other_data))
+print 'Words per excerpt without lemmatization',sum([sum([len(word_tokenize(sent)) for sent in sent_tokenize(s.decode('utf-8'))]) for s in author_data])/float(len(author_data)),sum([sum([len(word_tokenize(sent)) for sent in sent_tokenize(s.decode('utf-8'))]) for s in other_data])/float(len(other_data))
 
+
+print 'Average Word length per excerpt without lemmatization',sum([sum([sum([len(w) for w in word_tokenize(sent)]) for sent in sent_tokenize(s.decode('utf-8'))]) for s in author_data])/float(len(author_data)),sum([sum([sum([len(w) for w in word_tokenize(sent)]) for sent in sent_tokenize(s.decode('utf-8'))]) for s in other_data])/float(len(other_data))
 
 
 vocab_author,transformed_author = generate_features(author_data,1,1500,'words')
@@ -37,34 +65,36 @@ vocab_other,transformed_other = generate_features(other_data,1,1500,'words')
 
 '''vocab_train,transformed_train_X = generate_features(X_train_prep,1,1500,'words')
 
-vocab_train_func,transformed_train_X_func = generate_features(X_train_prep,1,1000,'func_words')
+vocab_train_func,transformed_train_X_func = generate_features(X_train_prep,1,1000,'func_words')'''
 
-#vocab_train_pos,transformed_train_X_pos = generate_features(X_train_prep,1,1000,'pos')
+vocab_train_pos,transformed_train_X_pos = generate_features(X_train_prep,1,1000,'pos')
 
-vocab_train_char_bigram,transformed_train_X_char_bigram = generate_features(X_train_prep,1,1000,'char',ngram=True)
+'''vocab_train_char_bigram,transformed_train_X_char_bigram = generate_features(X_train_prep,1,1000,'char',ngram=True)
 
 vocab_train_char_trigram,transformed_train_X_char_trigram = generate_features(X_train_prep,1,1000,'char',ngram=True,ngram_count = 3)
 
 vocab_train_func_bigram,transformed_train_X_func_bigram = generate_features(X_train_prep,1,1000,'func_words',ngram=True)
+'''
+vocab_train_pos_bigram,transformed_train_X_pos_bigram = generate_features(X_train_prep,1,1000,'pos',ngram=True)
 
-#vocab_train_pos_bigram,transformed_train_X_char = generate_features(X_train_prep,1,1000,'pos',ngram=True)
+vocab_train_words_bigram,transformed_train_X_words_bigram = generate_features(X_train_prep,1,100,'words',ngram=True)
 
 
-f = open('data_for_graph/vocab_counts','w')
+'''f = open('data_for_graph/vocab_counts','w')
 f.write(' '.join(vocab_train))
 f.close()
 
 
 f = open('data_for_graph/vocab_func','w')
 f.write(' '.join(vocab_train_func))
+f.close()'''
+
+
+f = open('data_for_graph/vocab_pos','w')
+f.write(' '.join(vocab_train_pos))
 f.close()
 
-
-#f = open('data_for_graph/vocab_pos','w')
-#f.write(' '.join(vocab_train_pos))
-#f.close()
-
-
+'''
 f = open('data_for_graph/vocab_char_bigram','w')
 f.write(' '.join([str(i) for i in vocab_train_char_bigram]))
 f.close()
@@ -72,72 +102,95 @@ f.close()
 
 f = open('data_for_graph/vocab_char_trigram','w')
 f.write(' '.join([str(i) for i in vocab_train_char_trigram]))
+f.close()'''
+
+
+f = open('data_for_graph/vocab_pos_bigram','w')
+f.write(' '.join([str(i) for i in vocab_train_pos_bigram]))
 f.close()
 
 
-#f = open('data_for_graph/vocab_pos_bigram','w')
-#f.write(' '.join([str(i) for i in vocab_train_pos_bigram]))
-#f.close()
+f = open('data_for_graph/vocab_words_bigram','w')
+f.write(' '.join([str(i) for i in vocab_train_words_bigram]))
+f.close()
 
-
+'''
 sentence_label_list_train = zip(transformed_train_X,Y_train)
-sentence_label_list_train_func = zip(transformed_train_X_func,Y_train)
-#sentence_label_list_train_pos = zip(transformed_train_X_pos,Y_train)
+sentence_label_list_train_func = zip(transformed_train_X_func,Y_train)'''
+sentence_label_list_train_pos = zip(transformed_train_X_pos,Y_train)
+'''
 sentence_label_list_train_char_bigram = zip(transformed_train_X_char_bigram,Y_train)
 sentence_label_list_train_char_trigram = zip(transformed_train_X_char_trigram,Y_train)
-sentence_label_list_train_func_bigram = zip(transformed_train_X_func_bigram,Y_train)
-#sentence_label_list_train_pos_bigram = zip(transformed_train_X_func_bigram,Y_train)
+sentence_label_list_train_func_bigram = zip(transformed_train_X_func_bigram,Y_train)'''
+sentence_label_list_train_pos_bigram = zip(transformed_train_X_pos_bigram,Y_train)
 
+sentence_label_list_train_words_bigram = zip(transformed_train_X_words_bigram,Y_train)
 
+'''
 features_train_words = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='counts')
 features_train_words_tfidf = format_features_sklearn(sentence_label_list_train,vocab_train,data_type='tf-idf')
-features_train_func = format_features_sklearn(sentence_label_list_train_func,vocab_train_func,data_type='tf-idf')
-#features_train_pos = format_features_sklearn(sentence_label_list_train_pos,vocab_train_pos,data_type='tf-idf')
-features_train_char_bigram = format_features_sklearn(sentence_label_list_train_char_bigram,vocab_train_char_bigram,data_type='tf-idf')
-features_train_char_trigram = format_features_sklearn(sentence_label_list_train_char_trigram,vocab_train_char_trigram,data_type='tf-idf')
-#features_train_pos_bigram = format_features_sklearn(sentence_label_list_train_pos_bigram,vocab_train_pos_bigram,data_type='tf-idf')
+features_train_func = format_features_sklearn(sentence_label_list_train_func,vocab_train_func,data_type='tf-idf')'''
+features_train_pos = format_features_sklearn(sentence_label_list_train_pos,vocab_train_pos,data_type='tf-idf')
+'''features_train_char_bigram = format_features_sklearn(sentence_label_list_train_char_bigram,vocab_train_char_bigram,data_type='tf-idf')
+features_train_char_trigram = format_features_sklearn(sentence_label_list_train_char_trigram,vocab_train_char_trigram,data_type='tf-idf')'''
+features_train_pos_bigram = format_features_sklearn(sentence_label_list_train_pos_bigram,vocab_train_pos_bigram,data_type='tf-idf')
+
+features_train_words_bigram = format_features_sklearn(sentence_label_list_train_words_bigram,vocab_train_words_bigram,data_type='tf-idf')
+'''
 features_train_func_bigram = format_features_sklearn(sentence_label_list_train_func_bigram,vocab_train_func_bigram,data_type='tf-idf')
 
 
 author_words = [features_train_words[i] for i in range(len(Y_train)) if Y_train[i]==1]
 author_words_tfidf = [features_train_words_tfidf[i] for i in range(len(Y_train)) if Y_train[i]==1]
-author_func = [features_train_func[i] for i in range(len(Y_train)) if Y_train[i]==1]
-#author_pos = [features_train_pos[i] for i in range(Y_train) if Y_train[i]==1]
+author_func = [features_train_func[i] for i in range(len(Y_train)) if Y_train[i]==1]'''
+author_pos = [features_train_pos[i] for i in range(len(Y_train)) if Y_train[i]==1]
+'''
 author_char_bigram = [features_train_char_bigram[i] for i in range(len(Y_train)) if Y_train[i]==1]
-author_char_trigram = [features_train_char_trigram[i] for i in range(len(Y_train)) if Y_train[i]==1]
-#author_pos_bigram = [features_train_pos_bigram[i] for i in range(Y_train) if Y_train[i]==1]
-author_func_bigram = [features_train_func_bigram[i] for i in range(len(Y_train)) if Y_train[i]==1]
+author_char_trigram = [features_train_char_trigram[i] for i in range(len(Y_train)) if Y_train[i]==1]'''
+author_pos_bigram = [features_train_pos_bigram[i] for i in range(len(Y_train)) if Y_train[i]==1]
+author_words_bigram = [features_train_words_bigram[i] for i in range(len(Y_train)) if Y_train[i]==1]
+'''author_func_bigram = [features_train_func_bigram[i] for i in range(len(Y_train)) if Y_train[i]==1]
 
 
 
 
 other_words = [features_train_words[i] for i in range(len(Y_train)) if Y_train[i]==0]
 other_words_tfidf = [features_train_words_tfidf[i] for i in range(len(Y_train)) if Y_train[i]==0]
-other_func = [features_train_func[i] for i in range(len(Y_train)) if Y_train[i]==0]
-#other_pos = [features_train_pos[i] for i in range(Y_train) if Y_train[i]==0]
+other_func = [features_train_func[i] for i in range(len(Y_train)) if Y_train[i]==0]'''
+other_pos = [features_train_pos[i] for i in range(len(Y_train)) if Y_train[i]==0]
+'''
 other_char_bigram = [features_train_char_bigram[i] for i in range(len(Y_train)) if Y_train[i]==0]
-other_char_trigram = [features_train_char_trigram[i] for i in range(len(Y_train)) if Y_train[i]==0]
-#other_pos_bigram = [features_train_pos_bigram[i] for i in range(Y_train) if Y_train[i]==0]
+other_char_trigram = [features_train_char_trigram[i] for i in range(len(Y_train)) if Y_train[i]==0]'''
+other_pos_bigram = [features_train_pos_bigram[i] for i in range(len(Y_train)) if Y_train[i]==0]
+
+other_words_bigram = [features_train_words_bigram[i] for i in range(len(Y_train)) if Y_train[i]==0]
+'''
 other_func_bigram = [features_train_func_bigram[i] for i in range(len(Y_train)) if Y_train[i]==0]
 
 write_features_to_file(author_words,'data_for_graph/author_words',' ')
 write_features_to_file(author_words_tfidf,'data_for_graph/author_words_tfidf',' ')
-write_features_to_file(author_func,'data_for_graph/author_func',' ')
-#write_features_to_file(author_pos,'data_for_graph/author_pos',' ')
+write_features_to_file(author_func,'data_for_graph/author_func',' ')'''
+write_features_to_file(author_pos,'data_for_graph/author_pos',' ')
+'''
 write_features_to_file(author_char_bigram,'data_for_graph/author_char_bigram',' ')
-write_features_to_file(author_char_trigram,'data_for_graph/author_char_trigram',' ')
-#write_features_to_file(author_pos_bigram,'data_for_graph/author_pos_bigram',' ')
+write_features_to_file(author_char_trigram,'data_for_graph/author_char_trigram',' ')'''
+write_features_to_file(author_pos_bigram,'data_for_graph/author_pos_bigram',' ')
+write_features_to_file(author_words_bigram,'data_for_graph/author_words_bigram',' ')
+'''
 write_features_to_file(author_func_bigram,'data_for_graph/author_func_bigram',' ')
 
 
 
 write_features_to_file(other_words,'data_for_graph/other_words',' ')
 write_features_to_file(other_words_tfidf,'data_for_graph/other_words_tfidf',' ')
-write_features_to_file(other_func,'data_for_graph/other_func',' ')
-#write_features_to_file(other_pos,'data_for_graph/other_pos',' ')
+write_features_to_file(other_func,'data_for_graph/other_func',' ')'''
+write_features_to_file(other_pos,'data_for_graph/other_pos',' ')
+'''
 write_features_to_file(other_char_bigram,'data_for_graph/other_char_bigram',' ')
-write_features_to_file(other_char_trigram,'data_for_graph/other_char_trigram',' ')
-#write_features_to_file(other_pos_bigram,'data_for_graph/other_pos_bigram',' ')
+write_features_to_file(other_char_trigram,'data_for_graph/other_char_trigram',' ')'''
+write_features_to_file(other_pos_bigram,'data_for_graph/other_pos_bigram',' ')
+write_features_to_file(other_words_bigram,'data_for_graph/other_words_bigram',' ')
+'''
 write_features_to_file(other_func_bigram,'data_for_graph/other_func_bigram',' ')
 
 '''

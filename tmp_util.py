@@ -335,6 +335,7 @@ def generate_features(sentence_list,vocab_limit=1,num_features=1000,feature_type
             for s in sent_list:
                 pos_list += [google_lookup[pos] for word,pos in pos_tag(word_tokenize(s))]
             feature_list += [pos_list]
+            print '.',
         print 'Parsing completed'
 
     elif feature_type == 'func_words':
